@@ -1,0 +1,11 @@
+export enum BackendType {
+
+    FIREBASE_JSON = "FIREBASE_JSON",
+
+    FIREBASE_DATABASE = "FIREBASE_DATABASE",
+
+    FIREBASE_IO = "FIREBASE_IO",
+
+    VPS = "VPS"
+
+}

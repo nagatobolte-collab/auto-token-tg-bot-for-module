@@ -5,5 +5,6 @@ import { logger } from "../logger/logger";
 export const db = new Database(ENV.DATABASE_PATH);
 
 db.pragma("journal_mode = WAL");
+db.pragma("foreign_keys = ON");
 
 logger.info("SQLite database connected.");
