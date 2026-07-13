@@ -16,3 +16,10 @@ data/*.sqlite
 .DS_Store
 
 coverage/
+
+# Temporary / backup files
+*.backup.ts
+*.bak
+*.tsy
+*.tsbuildinfo
+test-launch.ts
