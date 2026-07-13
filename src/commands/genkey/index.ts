@@ -1,22 +1,23 @@
 import { Telegraf } from "telegraf";
-import { ENV } from "../../config/env";
+
 import { generateLicenseKey } from "../../utils/licenseGenerator";
 import { LicenseRepository } from "../../database/repositories/LicenseRepository";
 import { LICENSE } from "../../constants/license";
 
+import { ownerOnly } from "../../middlewares/ownerOnly";
+
 export function registerGenKeyCommand(bot: Telegraf) {
-    bot.command("genkey", async (ctx) => {
-        if (!ctx.from) return;
 
-        if (ctx.from.id !== ENV.OWNER_ID) {
-            await ctx.reply("❌ You are not authorized.");
-            return;
-        }
+    bot.command(
+        "genkey",
+        ownerOnly,
+        async (ctx) => {
 
-        const args = ctx.message.text.trim().split(/\s+/);
+            const args = ctx.message.text.trim().split(/\s+/);
 
-        if (args.length !== 2) {
-            await ctx.reply(
+            if (args.length !== 2) {
+
+                await ctx.reply(
 `Usage
 
 /genkey lifetime
@@ -33,36 +34,49 @@ Examples
 /genkey 10
 /genkey 7
 /genkey 3`
-            );
-            return;
-        }
+                );
 
-        const input = args[1].toLowerCase();
-
-        let durationDays = 0;
-        let plan = LICENSE.LIFETIME;
-
-        if (input !== "lifetime") {
-            durationDays = Number(input);
-
-            if (!Number.isInteger(durationDays) || durationDays <= 0) {
-                await ctx.reply("❌ Invalid number of days.");
                 return;
+
             }
 
-            plan = `${durationDays} Days`;
-        }
+            const input = args[1].toLowerCase();
 
-        const key = generateLicenseKey();
+            let durationDays = 0;
 
-        LicenseRepository.create(
-            key,
-            plan,
-            durationDays,
-            ctx.from.id
-        );
+            let plan = LICENSE.LIFETIME;
 
-        await ctx.reply(
+            if (input !== "lifetime") {
+
+                durationDays = Number(input);
+
+                if (!Number.isInteger(durationDays) || durationDays <= 0) {
+
+                    await ctx.reply("❌ Invalid number of days.");
+
+                    return;
+
+                }
+
+                plan = `${durationDays} Days`;
+
+            }
+
+            const key = generateLicenseKey();
+
+            LicenseRepository.create(
+
+                key,
+
+                plan,
+
+                durationDays,
+
+                ctx.from.id
+
+            );
+
+            await ctx.reply(
 `━━━━━━━━━━━━━━━━━━━━
 ✅ License Generated
 📅 Plan
@@ -72,9 +86,13 @@ ${plan}
 📌 Status
 Unused
 ━━━━━━━━━━━━━━━━━━━━`,
-            {
-                parse_mode: "HTML"
-            }
-        );
-    });
+                {
+                    parse_mode: "HTML"
+                }
+            );
+
+        }
+
+    );
+
 }

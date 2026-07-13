@@ -1,20 +1,22 @@
-import admin from "firebase-admin";
+import * as admin from "firebase-admin";
 
 export class FirebaseService {
 
     static connect(serviceAccount: any) {
 
+        console.log("Firebase Admin:", Object.keys(admin));
+
         const appName = serviceAccount.project_id;
 
         try {
 
-            return admin.app(appName);
+            return admin.getApp(appName);
 
         } catch {
 
             return admin.initializeApp(
                 {
-                    credential: admin.credential.cert(serviceAccount),
+                    credential: admin.cert(serviceAccount),
                     databaseURL:
                         `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`
                 },
@@ -35,13 +37,42 @@ export class FirebaseService {
 
         try {
 
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.log("🔥 Firebase Health Check");
+            console.log("Project :", serviceAccount.project_id);
+
             const db = this.database(serviceAccount);
 
-            await db.ref("/").once("value");
+            console.log("📡 Connecting to Firebase...");
+
+            const snapshot = await db.ref("/").once("value");
+
+            console.log("✅ Firebase Connected");
+            console.log(
+                "Root Exists :",
+                snapshot.exists()
+            );
+
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
             return true;
 
-        } catch {
+        } catch (error: any) {
+
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.error("❌ Firebase Connection Failed");
+            console.error("Project :", serviceAccount.project_id);
+
+            if (error?.message) {
+                console.error("Message :", error.message);
+            }
+
+            if (error?.code) {
+                console.error("Code :", error.code);
+            }
+
+            console.error(error);
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
             return false;
 

@@ -1,22 +1,37 @@
 import { Markup } from "telegraf";
 
 export const backendKeyboard = Markup.inlineKeyboard([
+
     [
+
         Markup.button.callback(
-            "🟢 Firebase JSON",
+            "📂 Firebase JSON",
             "backend_firebase_json"
-        )
-    ],
-    [
+        ),
+
         Markup.button.callback(
-            "🔵 Firebase URL",
+            "🌐 Firebase URL",
             "backend_firebase_url"
         )
+
     ],
+
     [
+
         Markup.button.callback(
-            "🟣 VPS Panel",
+            "🖥️ VPS Panel",
             "backend_vps"
         )
+
+    ],
+
+    [
+
+        Markup.button.callback(
+            "⬅️ Back",
+            "setup_back"
+        )
+
     ]
+
 ]);

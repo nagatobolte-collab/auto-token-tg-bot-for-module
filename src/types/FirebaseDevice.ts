@@ -2,9 +2,13 @@ export interface FirebaseDevice {
 
     device_id: string;
 
-    model?: string;
+    note?: string;
 
     manufacturer?: string;
+
+    brand?: string;
+
+    model?: string;
 
     android_version?: string;
 
@@ -14,7 +18,7 @@ export interface FirebaseDevice {
 
     last_seen?: number;
 
-    note?: string;
+    network_type?: string;
 
     sim1_number?: string;
 
@@ -23,5 +27,7 @@ export interface FirebaseDevice {
     sim2_number?: string;
 
     sim2_carrier?: string;
+
+    active_sim?: number;
 
 }

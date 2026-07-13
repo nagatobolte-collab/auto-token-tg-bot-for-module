@@ -1,0 +1,161 @@
+import { DeviceRepository } from "../../database/repositories/DeviceRepository";
+
+
+export class FirebaseDeviceSync {
+
+
+    static async sync(
+        backendId:number,
+        users:Record<string,any>
+    ){
+
+        if(!users){
+            return 0;
+        }
+
+
+        const devices:any[] = [];
+
+
+
+        for(
+            const [deviceKey,d]
+            of Object.entries(users)
+        ){
+
+
+            const battery =
+                Number(
+                    String(
+                        d?.battery ?? "0"
+                    )
+                    .replace("%","")
+                );
+
+
+            const activeSim =
+                Number(
+                    d?.active_sim ?? 1
+                );
+
+
+            devices.push({
+
+                backendId,
+
+                deviceId:
+                    d?.device_id ??
+                    deviceKey,
+
+
+                deviceName:
+                    d?.model ??
+                    "Unknown Device",
+
+
+                note:
+                    d?.note,
+
+
+                manufacturer:
+                    d?.manufacturer,
+
+
+                brand:
+                    d?.brand,
+
+
+                model:
+                    d?.model,
+
+
+                androidVersion:
+                    d?.android_version,
+
+
+                phoneNumber:
+                    activeSim === 2
+                    ? d?.sim2_number
+                    : d?.sim1_number,
+
+
+                sim1Number:
+                    d?.sim1_number,
+
+
+                sim1Carrier:
+                    d?.sim1_carrier,
+
+
+                sim2Number:
+                    d?.sim2_number,
+
+
+                sim2Carrier:
+                    d?.sim2_carrier,
+
+
+                activeSim,
+
+
+                battery,
+
+
+                simCount:
+                    d?.sim2_number
+                    ? 2
+                    : 1,
+
+
+                networkType:
+                    d?.network_type,
+
+
+                status:
+                    d?.online
+                    ? "online"
+                    : "offline",
+
+
+                lastSeen:
+                    d?.last_seen
+                    ?
+                    new Date(
+                        Number(
+                            d.last_seen
+                        )
+                    ).toISOString()
+                    :
+                    undefined
+
+            });
+
+
+        }
+
+
+
+        /*
+            Bulk database write
+
+            Better for:
+            1000+
+            5000+
+            10000+
+            devices
+        */
+
+
+        const total =
+            DeviceRepository.bulkUpsert(
+                devices
+            );
+
+
+
+        return total;
+
+    }
+
+
+}

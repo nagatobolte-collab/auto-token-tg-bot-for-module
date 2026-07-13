@@ -1,37 +1,53 @@
 import { Telegraf } from "telegraf";
 
+import { MonitorChatRepository } from "../database/repositories/MonitorChatRepository";
+
 export function registerSetupCallbacks(bot: Telegraf) {
 
     bot.action("verify_group", async (ctx) => {
 
         await ctx.answerCbQuery();
 
-        const chat = ctx.chat;
-
-        if (!chat || chat.type === "private") {
-
-            await ctx.reply(
-`❌ No monitoring group found.
-
-Please:
-1️⃣ Add this bot to your Telegram group.
-2️⃣ Make it Admin.
-3️⃣ Return here and press Verify Group again.`
-            );
-
+        if (!ctx.from) {
             return;
         }
 
-        await ctx.reply(
-`✅ Group detected.
+        const chat =
+            MonitorChatRepository.findByTelegramId(
+                ctx.from.id
+            );
 
-Name:
-${chat.title}
-ID:
-${chat.id}
-(Temporary success)
-Next step:
-Connect your backend.`
+        if (!chat) {
+
+            await ctx.reply(
+`❌ No Telegram Chat Verified
+
+━━━━━━━━━━━━━━━━━━━━
+Use
+/verifychat
+Then paste the generated verification code
+inside your Telegram Group,
+Supergroup or Channel.
+━━━━━━━━━━━━━━━━━━━━`
+            );
+
+            return;
+
+        }
+
+        await ctx.reply(
+`━━━━━━━━━━━━━━━━━━━━
+✅ Telegram Chat Verified
+📢 Chat
+${chat.chat_title}
+🆔 Chat ID
+${chat.chat_id}
+📂 Type
+${chat.chat_type}
+🟢 Status
+Connected
+━━━━━━━━━━━━━━━━━━━━
+You can now connect your backend.`
         );
 
     });

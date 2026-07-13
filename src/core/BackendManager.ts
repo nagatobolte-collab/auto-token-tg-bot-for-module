@@ -5,44 +5,56 @@ import { TelegramFileService } from "../services/TelegramFileService";
 
 export class BackendManager {
 
-    static async import(ctx: Context) {
+    static async import(
+        ctx: Context
+    ) {
 
         if (!ctx.from) {
 
             return {
-
                 success: false,
-
-                message: "Invalid user."
-
+                message: "❌ Invalid Telegram user."
             };
 
         }
 
-        if (!("document" in ctx.message!)) {
+        if (!ctx.message || !("document" in ctx.message)) {
 
             return {
-
                 success: false,
-
-                message: "Please upload your Firebase JSON."
-
+                message:
+                    "📂 Please upload your Firebase Service Account JSON file."
             };
 
         }
 
-        const file = await ctx.telegram.getFile(
-            ctx.message.document.file_id
-        );
+        const document =
+            ctx.message.document;
+
+        if (
+            document.mime_type &&
+            document.mime_type !== "application/json"
+        ) {
+
+            return {
+                success: false,
+                message:
+                    "❌ Only Firebase JSON files are supported."
+            };
+
+        }
+
+        const file =
+            await ctx.telegram.getFile(
+                document.file_id
+            );
 
         if (!file.file_path) {
 
             return {
-
                 success: false,
-
-                message: "Unable to download file."
-
+                message:
+                    "❌ Unable to download the uploaded file."
             };
 
         }
@@ -52,7 +64,7 @@ export class BackendManager {
                 file.file_path
             );
 
-        return FirebaseJsonProvider.import(
+        return await FirebaseJsonProvider.import(
 
             ctx.from.id,
 
