@@ -21,11 +21,10 @@ export function registerSetupCallbacks(bot: Telegraf) {
 
             await ctx.reply(
 `❌ No Telegram Chat Verified
-
+add bot to your group or channel first
 ━━━━━━━━━━━━━━━━━━━━
-Use
-/verifychat
-Then paste the generated verification code
+Use /verifychat Then
+paste the generated verification code
 inside your Telegram Group,
 Supergroup or Channel.
 ━━━━━━━━━━━━━━━━━━━━`
@@ -38,14 +37,10 @@ Supergroup or Channel.
         await ctx.reply(
 `━━━━━━━━━━━━━━━━━━━━
 ✅ Telegram Chat Verified
-📢 Chat
-${chat.chat_title}
-🆔 Chat ID
-${chat.chat_id}
-📂 Type
-${chat.chat_type}
-🟢 Status
-Connected
+📢 Chat: ${chat.chat_title}
+🆔 Chat ID: ${chat.chat_id}
+📂 Type: ${chat.chat_type}
+🟢 Status: Connected
 ━━━━━━━━━━━━━━━━━━━━
 You can now connect your backend.`
         );

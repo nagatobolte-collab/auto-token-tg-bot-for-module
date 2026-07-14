@@ -92,7 +92,7 @@ export function startSenderWorker() {
 
                         sim_slot: queue.sim_slot,
 
-                        status: "processing",
+                        status: "pending",
 
                         result_message: "Queued by Nagato",
 

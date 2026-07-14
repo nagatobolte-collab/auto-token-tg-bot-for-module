@@ -25,59 +25,130 @@ import { registerMenuCommands } from "./commands/menu";
 import { startFirebaseSmsListener } from "./workers/FirebaseSmsListener";
 import { registerSetKeyCommand } from "./commands/setkey";
 
+import { setupBotCommands } from "./services/BotCommandsService";
+
+
 initializeDatabase();
 
+
 startMessageCleanupWorker();
+
 startMonitoringWorker();
+
 startSenderWorker();
+
 startFirebaseSmsListener();
+
+
+
 registerStartCommand(bot);
+
 registerGenKeyCommand(bot);
 
 registerBackendCallbacks(bot);
+
 registerDeviceCallbacks(bot);
 
 registerVerifyChatCommand(bot);
+
 registerMessageHandler(bot);
+
 registerGroupMessageHandler(bot);
 
 registerSetupCallbacks(bot);
 
 registerFindDeviceCommand(bot);
+
 registerStartMonitorCommand(bot);
+
 registerStopMonitorCommand(bot);
+
 registerSetKeyCommand(bot);
+
 registerMenuCommands(bot);
+
+
+
 (async () => {
+
 
     try {
 
-        logger.info("Deleting webhook...");
+
+        logger.info(
+            "Deleting webhook..."
+        );
+
 
         await bot.telegram.deleteWebhook({
-            drop_pending_updates: true
+
+            drop_pending_updates:true
+
         });
 
-        logger.info("Webhook deleted");
 
-        const me = await bot.telegram.getMe();
 
-        logger.info(`Logged in as @${me.username}`);
+        logger.info(
+            "Webhook deleted"
+        );
+
+
+
+        const me =
+            await bot.telegram.getMe();
+
+
+
+        logger.info(
+            `Logged in as @${me.username}`
+        );
+
+
+
+        // Default commands for new users
+        await setupBotCommands(bot);
+
+
 
         await bot.launch({
-            dropPendingUpdates: true
+
+            dropPendingUpdates:true
+
         });
 
-        logger.info("Bot started.");
-        logger.info(`Running on port ${ENV.PORT}`);
 
-    } catch (err) {
+
+        logger.info(
+            "Bot started."
+        );
+
+
+        logger.info(
+            `Running on port ${ENV.PORT}`
+        );
+
+
+    }
+    catch(err){
+
 
         console.error(err);
 
+
     }
+
 
 })();
 
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+
+
+process.once(
+    "SIGINT",
+    () => bot.stop("SIGINT")
+);
+
+
+process.once(
+    "SIGTERM",
+    () => bot.stop("SIGTERM")
+);

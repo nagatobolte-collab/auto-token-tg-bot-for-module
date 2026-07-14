@@ -311,7 +311,7 @@ function startDeviceListener(
 
                     bot.telegram.sendMessage(
 
-                        session.chat_id,
+                        session.telegram_id,
 
 
 `✅ SUCCESS
