@@ -14,6 +14,11 @@ export function registerMenuCommands(
         async (ctx) => {
 
 
+            if (!ctx.from) {
+                return;
+            }
+
+
             UserRepository.updateState(
 
                 ctx.from.id,
@@ -26,15 +31,18 @@ export function registerMenuCommands(
             await ctx.reply(
 `━━━━━━━━━━━━━━━━━━━━
 ➕ Add Backend
-Send your backend:
-🌐 Firebase URL
+Send your backend: 🌐 Firebase URL
+
 Example:
 https://xxxxx.firebaseio.com
+
 or
+
 https://xxxxx.firebasedatabase.app
+
 📂 Firebase JSON
-🖥️ VPS API
-(coming)
+
+🖥️ VPS API: (coming soon)
 ━━━━━━━━━━━━━━━━━━━━`
             );
 
