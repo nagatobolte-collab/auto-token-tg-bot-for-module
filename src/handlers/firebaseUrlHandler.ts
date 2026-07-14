@@ -9,36 +9,92 @@ export async function firebaseUrlHandler(
     ctx: Context
 ) {
 
+
     if (!ctx.from) {
         return;
     }
 
-    if (!ctx.message || !("text" in ctx.message)) {
+
+
+
+    if (
+        !ctx.message ||
+        !("text" in ctx.message)
+    ) {
+
 
         await ctx.reply(
 `━━━━━━━━━━━━━━━━━━━━
 ❌ Invalid Input
-Please send only your
-Firebase Realtime Database URL.
+
+Please send Firebase
+Realtime Database URL.
 ━━━━━━━━━━━━━━━━━━━━`
         );
+
 
         return;
 
     }
 
 
-    const url =
+
+
+    let url =
         ctx.message.text.trim();
+
+
+
+
+    // remove accidental spaces
+
+    url =
+        url.replace(/\s+/g,"");
+
+
+
+
+    // validate firebase url
+
+    if (
+        !(
+            url.includes("firebaseio.com") ||
+            url.includes("firebasedatabase.app")
+        )
+    ) {
+
+
+        await ctx.reply(
+`━━━━━━━━━━━━━━━━━━━━
+❌ Invalid Firebase URL
+
+Supported: .firebaseio.com
+
+or
+
+.firebasedatabase.app
+━━━━━━━━━━━━━━━━━━━━`
+        );
+
+
+        return;
+
+    }
+
+
 
 
     await ctx.reply(
 `━━━━━━━━━━━━━━━━━━━━
 🔄 Connecting Firebase...
+
 Checking database
 and syncing devices.
 ━━━━━━━━━━━━━━━━━━━━`
     );
+
+
+
 
 
     const result =
@@ -51,19 +107,29 @@ and syncing devices.
         );
 
 
+
+
+
     if (!result.success) {
+
 
         await ctx.reply(
 `━━━━━━━━━━━━━━━━━━━━
 ❌ Firebase Connection Failed
+
 ${result.message}
+
 Please check your URL.
 ━━━━━━━━━━━━━━━━━━━━`
         );
 
+
         return;
 
     }
+
+
+
 
 
     UserRepository.updateState(
@@ -75,6 +141,9 @@ Please check your URL.
     );
 
 
+
+
+
     await ctx.reply(
 `━━━━━━━━━━━━━━━━━━━━
 ✅ Firebase Connected
@@ -82,10 +151,10 @@ Please check your URL.
 ${result.backendIdentifier}
 📱 Devices Found
 ${result.totalDevices}
-🟢 Status
-Online
+🟢 Status: Online
 Backend saved successfully.
 ━━━━━━━━━━━━━━━━━━━━`
     );
+
 
 }
