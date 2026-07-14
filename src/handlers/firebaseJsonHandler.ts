@@ -33,12 +33,9 @@ ${result.message}
     await ctx.reply(
 `━━━━━━━━━━━━━━━━━━━━
 ✅ Backend Connected
-📂 Project
-${result.backendIdentifier}
-📱 Devices Found
-${result.totalDevices}
-🟢 Status
-Online
+📂 Project: ${result.backendIdentifier}
+📱 Devices Found: ${result.totalDevices}
+🟢 Status: Online
 ━━━━━━━━━━━━━━━━━━━━
 Your backend is ready.
 Next Step

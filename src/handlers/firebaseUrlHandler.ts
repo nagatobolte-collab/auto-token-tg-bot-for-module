@@ -1,37 +1,38 @@
 import { Context } from "telegraf";
 
 import { FirebaseUrlProvider } from "../backends/firebase/FirebaseUrlProvider";
+
 import { UserRepository } from "../database/repositories/UserRepository";
+
 import { UserState } from "../enums/UserState";
 
 
+
 export async function firebaseUrlHandler(
-    ctx: Context
-) {
+    ctx:Context
+){
 
-
-    if (!ctx.from) {
+    if(!ctx.from){
         return;
     }
 
 
 
-
-    if (
+    if(
         !ctx.message ||
         !("text" in ctx.message)
-    ) {
-
+    ){
 
         await ctx.reply(
-`━━━━━━━━━━━━━━━━━━━━
-❌ Invalid Input
+`<pre>
+❌ INVALID INPUT
 
 Please send Firebase
 Realtime Database URL.
-━━━━━━━━━━━━━━━━━━━━`
-        );
-
+</pre>`,
+        {
+            parse_mode:"HTML"
+        });
 
         return;
 
@@ -40,88 +41,100 @@ Realtime Database URL.
 
 
 
-    let url =
-        ctx.message.text.trim();
+    let text =
+        ctx.message.text
+        .trim()
+        .replace(/\s+/g,"")
+        .replace(/^["']|["']$/g,"");
 
 
 
 
-    // remove accidental spaces
-
-    url =
-        url.replace(/\s+/g,"");
-
-
+    const user:any =
+        UserRepository.findByTelegramId(
+            ctx.from.id
+        );
 
 
-    // validate firebase url
-
-    if (
-        !(
-            url.includes("firebaseio.com") ||
-            url.includes("firebasedatabase.app")
-        )
-    ) {
 
 
-        await ctx.reply(
-`━━━━━━━━━━━━━━━━━━━━
-❌ Invalid Firebase URL
+    /*
+        STEP 1
+        USER SENDS FIREBASE URL
+    */
 
-Supported: .firebaseio.com
+    if(
+        user?.state === UserState.WAITING_BACKEND ||
+        user?.state === UserState.WAITING_FIREBASE_URL
+    ){
+
+
+
+        if(
+            !(
+                text.includes("firebaseio.com") ||
+                text.includes("firebasedatabase.app")
+            )
+        ){
+
+            await ctx.reply(
+`<pre>
+❌ INVALID FIREBASE URL
+
+Supported:
+
+.firebaseio.com
 
 or
 
 .firebasedatabase.app
-━━━━━━━━━━━━━━━━━━━━`
-        );
+</pre>`,
+            {
+                parse_mode:"HTML"
+            });
 
 
-        return;
+            return;
 
-    }
-
-
-
-
-    await ctx.reply(
-`━━━━━━━━━━━━━━━━━━━━
-🔄 Connecting Firebase...
-
-Checking database
-and syncing devices.
-━━━━━━━━━━━━━━━━━━━━`
-    );
+        }
 
 
 
 
-
-    const result =
-        await FirebaseUrlProvider.import(
+        UserRepository.setFirebaseUrl(
 
             ctx.from.id,
 
-            url
+            text
 
         );
 
 
 
+        UserRepository.updateState(
+
+            ctx.from.id,
+
+            UserState.WAITING_FIREBASE_AUTH
+
+        );
 
 
-    if (!result.success) {
+
 
 
         await ctx.reply(
-`━━━━━━━━━━━━━━━━━━━━
-❌ Firebase Connection Failed
+`<pre>
+🔐 FIREBASE AUTHENTICATION REQUIRED
 
-${result.message}
+Your database is protected.
 
-Please check your URL.
-━━━━━━━━━━━━━━━━━━━━`
-        );
+Send Firebase Auth Key:
+</pre>`,
+        {
+            parse_mode:"HTML"
+        });
+
 
 
         return;
@@ -132,29 +145,157 @@ Please check your URL.
 
 
 
-    UserRepository.updateState(
 
-        ctx.from.id,
-
-        UserState.READY
-
-    );
+    /*
+        STEP 2
+        USER SENDS AUTH KEY
+    */
 
 
+    if(
+        user?.state === UserState.WAITING_FIREBASE_AUTH
+    ){
 
 
 
-await ctx.reply(
-`<pre>✅ FIREBASE CONNECTED
+        const firebaseUrl =
+            UserRepository.getFirebaseUrl(
+                ctx.from.id
+            );
+
+
+
+        if(!firebaseUrl){
+
+
+            await ctx.reply(
+`<pre>
+❌ SESSION EXPIRED
+
+Please add Firebase again.
+</pre>`,
+            {
+                parse_mode:"HTML"
+            });
+
+
+            return;
+
+        }
+
+
+
+
+
+        const authKey =
+            text;
+
+
+
+
+        await ctx.reply(
+`<pre>
+🔄 VERIFYING FIREBASE
+
+Connecting database...
+Please wait.
+</pre>`,
+        {
+            parse_mode:"HTML"
+        });
+
+
+
+
+
+
+
+        const result =
+            await FirebaseUrlProvider.import(
+
+                ctx.from.id,
+
+                firebaseUrl,
+
+                authKey
+
+            );
+
+
+
+
+
+
+
+        if(!result.success){
+
+
+
+            await ctx.reply(
+`<pre>
+❌ FIREBASE CONNECTION FAILED
+
+${result.message}
+
+Check Auth Key and try again.
+</pre>`,
+            {
+                parse_mode:"HTML"
+            });
+
+
+
+            return;
+
+        }
+
+
+
+
+
+
+
+
+        UserRepository.clearFirebasePending();
+
+
+
+        UserRepository.updateState(
+
+            ctx.from.id,
+
+            UserState.READY
+
+        );
+
+
+
+
+
+
+
+        await ctx.reply(
+`<pre>
+✅ FIREBASE CONNECTED
 🌐 DATABASE
 ${result.backendIdentifier}
-📱 DEVICES: ${result.totalDevices}
+📱 DEVICES
+${result.totalDevices}
 🟢 STATUS: ONLINE
-⚡ SMS STREAM READY</pre>`,
-{
-    parse_mode: "HTML"
-}
-);
+⚡ SMS STREAM READY
+</pre>`,
+        {
+            parse_mode:"HTML"
+        });
+
+
+
+        return;
+
+    }
+
+
+
 
 
 }

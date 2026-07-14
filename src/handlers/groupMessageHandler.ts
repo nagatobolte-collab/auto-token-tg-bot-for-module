@@ -163,8 +163,7 @@ Generate a new code using /verifychat`
                 String(ctx.chat.id),
 `✅ Chat Verified
 📢 ${ctx.chat.title ?? "Unknown"}
-💬 Type
-${chatType}
+💬 Type: ${chatType}
 🚀 Monitoring source connected.
 Return to bot and continue setup.`
             );

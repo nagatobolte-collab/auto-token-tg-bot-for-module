@@ -1,15 +1,20 @@
 import { db } from "../database";
 
+
 export class BackendRepository {
 
-    static create(data: {
-        telegramId: number;
-        backendType: string;
-        backendIdentifier: string;
-        config: string;
-    }) {
+
+
+    static create(data:{
+        telegramId:number;
+        backendType:string;
+        backendIdentifier:string;
+        config:string;
+    }){
+
 
         return db.prepare(`
+
             INSERT INTO backends (
 
                 telegram_id,
@@ -21,96 +26,226 @@ export class BackendRepository {
                 config
 
             )
+
             VALUES (?, ?, ?, ?)
+
         `).run(
+
 
             data.telegramId,
 
+
             data.backendType,
+
 
             data.backendIdentifier,
 
+
             data.config
+
 
         );
 
+
     }
+
+
+
+
+
+
 
     static findById(
-        id: number
-    ) {
+        id:number
+    ){
+
 
         return db.prepare(`
+
             SELECT *
+
             FROM backends
+
             WHERE id = ?
+
             LIMIT 1
+
         `).get(id);
+
 
     }
 
+
+
+
+
+
+
+
+
     static findConfig(
-        id: number
-    ) {
+        id:number
+    ){
 
-        const backend: any = db.prepare(`
-            SELECT *
-            FROM backends
-            WHERE id = ?
-            LIMIT 1
-        `).get(id);
 
-        if (!backend) {
+        const backend:any =
+
+            db.prepare(`
+
+                SELECT *
+
+                FROM backends
+
+                WHERE id = ?
+
+                LIMIT 1
+
+            `).get(id);
+
+
+
+
+        if(!backend){
+
             return null;
+
         }
+
+
+
+
+
+
+        let config:any = {};
+
+
+
+        try {
+
+
+            config =
+                JSON.parse(
+                    backend.config
+                );
+
+
+        }
+        catch{
+
+
+            config =
+                backend.config;
+
+
+        }
+
+
+
+
 
         return {
 
+
             ...backend,
 
-            config: JSON.parse(backend.config)
+
+            config
+
 
         };
 
+
+
     }
+
+
+
+
+
+
+
+
 
     static findByTelegramId(
-        telegramId: number
-    ) {
+        telegramId:number
+    ){
+
+
 
         return db.prepare(`
+
             SELECT *
+
             FROM backends
+
             WHERE telegram_id = ?
+
             ORDER BY id DESC
-        `).all(telegramId);
+
+        `).all(
+
+            telegramId
+
+        );
+
+
 
     }
+
+
+
+
+
+
+
+
 
     static findByIdentifier(
-        identifier: string
-    ) {
+        identifier:string
+    ){
+
 
         return db.prepare(`
+
             SELECT *
+
             FROM backends
+
             WHERE backend_identifier = ?
+
             LIMIT 1
-        `).get(identifier);
+
+        `).get(
+
+            identifier
+
+        );
+
 
     }
 
+
+
+
+
+
+
+
+
     static updateStatus(
-        id: number,
-        status: string
-    ) {
+        id:number,
+        status:string
+    ){
+
 
         return db.prepare(`
+
             UPDATE backends
 
             SET status = ?
 
             WHERE id = ?
+
         `).run(
 
             status,
@@ -119,53 +254,122 @@ export class BackendRepository {
 
         );
 
+
     }
 
+
+
+
+
+
+
+
+
     static updateLastSync(
-        id: number
-    ) {
+        id:number
+    ){
+
 
         return db.prepare(`
+
             UPDATE backends
 
             SET last_sync = CURRENT_TIMESTAMP
 
             WHERE id = ?
-        `).run(id);
+
+        `).run(
+
+            id
+
+        );
+
 
     }
+
+
+
+
+
+
+
+
 
     static delete(
-        id: number
-    ) {
+        id:number
+    ){
+
 
         return db.prepare(`
+
             DELETE
+
             FROM backends
+
             WHERE id = ?
-        `).run(id);
+
+        `).run(
+
+            id
+
+        );
+
 
     }
 
-    static countAll() {
+
+
+
+
+
+
+
+
+    static countAll(){
+
 
         return db.prepare(`
+
             SELECT COUNT(*) AS total
+
             FROM backends
+
         `).get();
 
+
+
     }
+
+
+
+
+
+
+
+
 
     static countByType(
-        type: string
-    ) {
+        type:string
+    ){
+
 
         return db.prepare(`
+
             SELECT COUNT(*) AS total
+
             FROM backends
+
             WHERE backend_type = ?
-        `).get(type);
+
+        `).get(
+
+            type
+
+        );
+
 
     }
+
+
 
 }

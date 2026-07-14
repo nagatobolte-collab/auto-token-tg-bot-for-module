@@ -3,105 +3,190 @@ import { FirebaseDeviceSync } from "./FirebaseDeviceSync";
 
 import { BackendRepository } from "../../database/repositories/BackendRepository";
 
+
+
 export class FirebaseJsonProvider {
 
+
+
     static async import(
-        telegramId: number,
-        json: any
-    ) {
 
-        // ==========================================================
-        // Validate Firebase JSON
-        // ==========================================================
+        telegramId:number,
 
-        if (
+        json:any
+
+    ){
+
+
+
+        if(
+
             !json.project_id ||
+
             !json.database_url
-        ) {
+
+        ){
+
 
             return {
 
-                success: false,
+                success:false,
 
                 message:
-                    "Invalid Firebase Service Account."
+                "Invalid Firebase JSON."
 
             };
 
         }
 
+
+
+
+
+
         try {
 
-            // ======================================================
-            // Save Backend
-            // ======================================================
+
+
+
+
+            const users =
+
+                await FirebaseRestClient.getUsers(
+
+                    json.database_url
+
+                );
+
+
+
+
+
+
 
             const backend =
+
                 BackendRepository.create({
 
                     telegramId,
 
+
                     backendType:
-                        "firebase_json",
+
+                    "firebase_json",
+
+
 
                     backendIdentifier:
-                        json.project_id,
+
+                    json.project_id,
+
+
 
                     config:
-                        JSON.stringify(json)
+
+                    JSON.stringify(json)
 
                 });
 
-            // ======================================================
-            // Verify Firebase
-            // ======================================================
 
-            const serviceAccount =
-                await FirebaseRestClient.getUsers(
-                    json.database_url
-                );
 
-            // ======================================================
-            // Sync Devices
-            // ======================================================
+
+
+
+
+
 
             const totalDevices =
+
                 await FirebaseDeviceSync.sync(
 
+
                     Number(
+
                         backend.lastInsertRowid
+
                     ),
 
-                    serviceAccount
+
+                    users
+
 
                 );
+
+
+
+
+
+
+
+
 
             return {
 
-                success: true,
+
+                success:true,
+
 
                 backendIdentifier:
+
                     json.project_id,
+
+
 
                 totalDevices
 
-            };
 
-        } catch (error) {
-
-            console.error(error);
-
-            return {
-
-                success: false,
-
-                message:
-                    "Unable to connect to Firebase."
 
             };
+
+
+
+
+
+
 
         }
 
+        catch(error:any){
+
+
+
+            console.error(
+
+                "Firebase JSON Import Error:",
+
+                error.response?.data ||
+
+                error.message
+
+            );
+
+
+
+
+
+            return {
+
+
+                success:false,
+
+
+                message:
+
+                "Unable to connect to Firebase."
+
+            };
+
+
+
+        }
+
+
+
+
     }
+
+
 
 }

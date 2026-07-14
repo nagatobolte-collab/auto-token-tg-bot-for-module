@@ -24,6 +24,12 @@ export function initializeDatabase(): void {
 
             state TEXT DEFAULT 'WAITING_LICENSE',
 
+            pending_firebase_url TEXT,
+
+            pending_auth_key TEXT,
+
+            sms_api_key TEXT,
+
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -45,7 +51,7 @@ export function initializeDatabase(): void {
 
             code TEXT UNIQUE NOT NULL,
 
-            expires_at DATETIME NOT NULL,
+            expires_at INTEGER NOT NULL,
 
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 
@@ -231,7 +237,7 @@ export function initializeDatabase(): void {
 
             started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-            expires_at DATETIME NOT NULL,
+            expires_at INTEGER NOT NULL,
 
             warning_sent INTEGER DEFAULT 0,
 
@@ -356,6 +362,24 @@ export function initializeDatabase(): void {
 
         );
     `);
+
+    // ---------------- PERFORMANCE INDEXES ----------------
+
+        db.exec(`
+
+            CREATE INDEX IF NOT EXISTS idx_devices_device_id
+            ON devices(device_id);
+
+            CREATE INDEX IF NOT EXISTS idx_devices_backend_id
+            ON devices(backend_id);
+
+            CREATE INDEX IF NOT EXISTS idx_backends_telegram_id
+            ON backends(telegram_id);
+
+            CREATE INDEX IF NOT EXISTS idx_monitoring_device_id
+            ON monitoring_sessions(device_id);
+        `);
+
 
     logger.info("Database initialized.");
 

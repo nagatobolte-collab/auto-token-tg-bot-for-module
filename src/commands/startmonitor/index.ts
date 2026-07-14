@@ -84,7 +84,7 @@ export function registerStartMonitorCommand(
 
 
             const sim =
-                result.device.active_sim === 2
+                result.simSlot === 2
                     ? "SIM 2"
                     : "SIM 1";
 

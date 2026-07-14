@@ -1,7 +1,10 @@
 import { db } from "../database";
 import { UserState } from "../../enums/UserState";
 
+
 export class UserRepository {
+
+
 
     static findByTelegramId(
         telegramId: number
@@ -15,14 +18,20 @@ export class UserRepository {
             WHERE telegram_id = ?
 
             LIMIT 1
-        `).get(telegramId);
+
+        `).get(
+            telegramId
+        );
 
     }
 
 
+
+
+
     static exists(
-        telegramId: number
-    ): boolean {
+        telegramId:number
+    ):boolean {
 
         return !!this.findByTelegramId(
             telegramId
@@ -32,21 +41,26 @@ export class UserRepository {
 
 
 
-    static create(user: {
 
-        telegramId: number;
 
-        username?: string;
 
-        firstName?: string;
 
-        lastName?: string;
+    static create(user:{
 
-        licenseId?: number | null;
+        telegramId:number;
 
-        state: UserState;
+        username?:string;
+
+        firstName?:string;
+
+        lastName?:string;
+
+        licenseId?:number|null;
+
+        state:UserState;
 
     }) {
+
 
         return db.prepare(`
             INSERT INTO users (
@@ -87,10 +101,16 @@ export class UserRepository {
 
 
 
+
+
+
+
+
     static updateState(
-        telegramId: number,
-        state: UserState
+        telegramId:number,
+        state:UserState
     ) {
+
 
         return db.prepare(`
             UPDATE users
@@ -116,10 +136,185 @@ export class UserRepository {
 
 
 
-    static updateLicense(
-        telegramId: number,
-        licenseId: number
+
+
+
+
+    static setFirebaseUrl(
+        telegramId:number,
+        url:string
     ) {
+
+
+        return db.prepare(`
+            UPDATE users
+
+            SET
+
+                pending_firebase_url = ?,
+
+                updated_at = CURRENT_TIMESTAMP
+
+            WHERE telegram_id = ?
+
+        `).run(
+
+            url,
+
+            telegramId
+
+        );
+
+    }
+
+
+
+
+
+
+
+    static getFirebaseUrl(
+        telegramId:number
+    ) {
+
+
+        const user:any =
+
+            db.prepare(`
+                SELECT pending_firebase_url
+
+                FROM users
+
+                WHERE telegram_id = ?
+
+                LIMIT 1
+
+            `).get(
+
+                telegramId
+
+            );
+
+
+        return user?.pending_firebase_url ?? null;
+
+
+    }
+
+
+
+
+
+
+
+
+    static setFirebaseAuthKey(
+        telegramId:number,
+        authKey:string
+    ) {
+
+
+        return db.prepare(`
+            UPDATE users
+
+            SET
+
+                pending_auth_key = ?,
+
+                updated_at = CURRENT_TIMESTAMP
+
+            WHERE telegram_id = ?
+
+        `).run(
+
+            authKey,
+
+            telegramId
+
+        );
+
+    }
+
+
+
+
+
+
+
+
+    static getFirebaseAuthKey(
+        telegramId:number
+    ) {
+
+
+        const user:any =
+
+            db.prepare(`
+                SELECT pending_auth_key
+
+                FROM users
+
+                WHERE telegram_id = ?
+
+                LIMIT 1
+
+            `).get(
+
+                telegramId
+
+            );
+
+
+        return user?.pending_auth_key ?? null;
+
+
+    }
+
+
+
+
+
+
+
+
+    static clearFirebasePending(
+        telegramId:number
+    ) {
+
+
+        return db.prepare(`
+            UPDATE users
+
+            SET
+
+                pending_firebase_url = NULL,
+
+                pending_auth_key = NULL,
+
+                updated_at = CURRENT_TIMESTAMP
+
+            WHERE telegram_id = ?
+
+        `).run(
+
+            telegramId
+
+        );
+
+    }
+
+
+
+
+
+
+
+
+    static updateLicense(
+        telegramId:number,
+        licenseId:number
+    ) {
+
 
         return db.prepare(`
             UPDATE users
@@ -145,11 +340,17 @@ export class UserRepository {
 
 
 
+
+
+
+
     static getSmsApiKey(
-        telegramId: number
+        telegramId:number
     ) {
 
+
         const user:any =
+
             db.prepare(`
                 SELECT sms_api_key
 
@@ -160,13 +361,20 @@ export class UserRepository {
                 LIMIT 1
 
             `).get(
+
                 telegramId
+
             );
 
 
         return user?.sms_api_key || null;
 
+
     }
+
+
+
+
 
 
 
@@ -175,6 +383,7 @@ export class UserRepository {
         telegramId:number,
         key:string
     ) {
+
 
         return db.prepare(`
             UPDATE users
@@ -200,9 +409,14 @@ export class UserRepository {
 
 
 
+
+
+
+
     static delete(
-        telegramId: number
+        telegramId:number
     ) {
+
 
         return db.prepare(`
             DELETE
@@ -222,7 +436,12 @@ export class UserRepository {
 
 
 
+
+
+
+
     static count() {
+
 
         return db.prepare(`
             SELECT COUNT(*) AS total
@@ -231,12 +450,18 @@ export class UserRepository {
 
         `).get();
 
+
     }
 
 
 
 
+
+
+
+
     static all() {
+
 
         return db.prepare(`
             SELECT *
@@ -247,6 +472,8 @@ export class UserRepository {
 
         `).all();
 
+
     }
+
 
 }

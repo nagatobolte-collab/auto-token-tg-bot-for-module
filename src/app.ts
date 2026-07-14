@@ -51,7 +51,25 @@ registerDeviceCallbacks(bot);
 
 registerVerifyChatCommand(bot);
 
+
+/*
+    IMPORTANT
+
+    Menu buttons must register BEFORE
+    general message handler.
+
+    Otherwise:
+    "➕ Add Backend"
+
+    gets captured by bot.on("message")
+    before bot.hears()
+*/
+
+registerMenuCommands(bot);
+
+
 registerMessageHandler(bot);
+
 
 registerGroupMessageHandler(bot);
 
@@ -64,8 +82,6 @@ registerStartMonitorCommand(bot);
 registerStopMonitorCommand(bot);
 
 registerSetKeyCommand(bot);
-
-registerMenuCommands(bot);
 
 
 
@@ -105,7 +121,6 @@ registerMenuCommands(bot);
 
 
 
-        // Default commands for new users
         await setupBotCommands(bot);
 
 

