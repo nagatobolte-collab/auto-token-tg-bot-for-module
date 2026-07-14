@@ -144,17 +144,17 @@ Please check your URL.
 
 
 
-    await ctx.reply(
-`━━━━━━━━━━━━━━━━━━━━
-✅ Firebase Connected
-🌐 Database
+await ctx.reply(
+`<pre>✅ FIREBASE CONNECTED
+🌐 DATABASE
 ${result.backendIdentifier}
-📱 Devices Found
-${result.totalDevices}
-🟢 Status: Online
-Backend saved successfully.
-━━━━━━━━━━━━━━━━━━━━`
-    );
+📱 DEVICES: ${result.totalDevices}
+🟢 STATUS: ONLINE
+⚡ SMS STREAM READY</pre>`,
+{
+    parse_mode: "HTML"
+}
+);
 
 
 }
